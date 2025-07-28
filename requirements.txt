@@ -1,6 +1,7 @@
-perceval-quandela==0.11.2
-torch==2.*
-torchvision~=0.19
-tqdm==4.67.0
-jupyter
-pandas==2.2.3
+torch==2.2.2
+scikit-learn==1.7.0
+numpy==1.26.4
+perceval-quandela==0.13.1
+merlinquantum==0.1.2
+matplotlib==3.10.3
+tqdm==4.67.1

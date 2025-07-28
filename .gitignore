@@ -1,0 +1,5 @@
+.venv
+.DS_Store
+uv.lock
+pyproject.toml
+*__pycache__
