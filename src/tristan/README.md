@@ -79,6 +79,12 @@ Everything related to training hyperparameters such as optimizer, objective func
 ### [Inference](./qml/inference/)
 Some tools to evaluate an existing / already trained model.
 
+## MerLin
+This small QML framework is not -yet- based on [MerLin](https://merlinquantum.ai/) from Quandela. 
+
+Effort must be made on the [qconv2d layer](./qml/models/layers/quantum/qconv_2d.py) which is based on the [SLOS directory](./qml/models/layers/quantum/slos) (which must be replaced by MerLin).
+
+
 ## Team Members
 - Antoine Radet (aradet@scaleway.com)
 - Ludovic Le Frioux (llefrioux@scaleway.com)

@@ -10,9 +10,9 @@ from qml.models.layers.utils import register
 
 from qml.models.layers.quantum.ansatz import build_ansatz
 from qml.models.layers.quantum.feature_maps import build_feature_map
-from qml.models.layers.quantum.slos import QuantumLayer, OutputMappingStrategy
 
-# from joblib import Parallel, delayed
+# TODO: Use MerLin from Quandela here instead of local QuantumLayer
+from qml.models.layers.quantum.slos import QuantumLayer, OutputMappingStrategy
 
 
 class QuantumConv2d(Module):
