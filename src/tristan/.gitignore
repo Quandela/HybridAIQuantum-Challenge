@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+lightning_logs/
+tb_logs/
+outputs/
+output/
+resources/mnist_full/MNIST
+resources/mnist_partial/*.save
+analysis/_*.csv
