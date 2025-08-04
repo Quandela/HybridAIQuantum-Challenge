@@ -1,11 +1,10 @@
-from fire import Fire
 from typing import Optional
 
 from torch import set_default_device, set_float32_matmul_precision
 from torch import cuda, multiprocessing
 
 from qml.models import MnistNet
-from qml.models.topologies import TopologyParams, DUMMY_LINEAR_TOPOLOGY
+from qml.models.topologies import TopologyParams
 
 from qml.training import Trainer, TrainingParams
 from qml.training.losses import CROSS_ENTROPY_LOSS
@@ -21,13 +20,13 @@ _DEFAULT_OPTIMIZER = ADAM_OPTIMIZER
 _DEFAULT_SCHEDULER = None
 _DEFAULT_LEARNING_RATE = 1e-3
 _DEFAULT_EPOCHS = 5
-_DEFAULT_BATCH_SIZE = 24
+_DEFAULT_BATCH_SIZE = 128
 _DEFAULT_TRAINING_DATASET = "mnist_partial_classification"
 
 # For the model itself
-_DEFAULT_TOPOLOGY = DUMMY_LINEAR_TOPOLOGY
+_DEFAULT_TOPOLOGY = "tristan_qt"
 _DEFAULT_TOPOLOGY_EXTRA_PARAMS = None
-_DEFAULT_DEVICE = "cpu"
+_DEFAULT_DEVICE = "auto"
 
 # Name of the training model
 _DEFAULT_OUTPUT_DIR = "output/latest"
@@ -37,7 +36,10 @@ _DEFAULT_NO_OUTPUT = False
 _DEFAULT_INFERENCE_DATASET = "mnist_classification"
 
 
-def _check_device_and_configure(device: str) -> None:
+def _check_device_and_configure(device: str) -> str:
+    if device == "auto":
+        device = device == "cuda" if cuda.is_available() else "cpu"
+
     if "cuda" in device:
         if cuda.is_available():
             multiprocessing.set_start_method("spawn")
@@ -66,7 +68,7 @@ class Main(object):
         assert device
         assert batch_size
 
-        _check_device_and_configure(device)
+        device = _check_device_and_configure(device)
 
         model = MnistNet.load(model_directory)
 
@@ -112,7 +114,7 @@ class Main(object):
             epochs=epochs,
         )
 
-        _check_device_and_configure(device)
+        device = _check_device_and_configure(device)
 
         training_data = TrainingData(batch_size=batch_size, name=dataset, device=device)
 
@@ -133,4 +135,10 @@ class Main(object):
 
 
 if __name__ == "__main__":
-    Fire(Main)
+    # Original behaviour
+    # from fire import Fire
+    # Fire(Main)
+
+    # Updated behaviour for current github repository:
+    # run training with all default hyper parameters
+    Main().train()

@@ -1,5 +1,20 @@
 # The First Perceval Quest - Qaradoq Team
 
+## IMPORTANT NOTES!
+
+### To run it
+The codebase was made during the First Perceval Quest by [Quandela](quandela.com) and [Scaleway](scaleway.com).
+Few modification were done to make it run 'as it':
+
+```bash
+python3 main.py # should be enough to train the model
+```
+
+### MerLin update
+This small QML framework is not -yet- based on [MerLin](https://merlinquantum.ai/) from Quandela.
+
+Effort must be made on the [qconv2d layer](./qml/models/layers/quantum/qconv_2d.py) which is based on the [SLOS directory](./qml/models/layers/quantum/slos) (which must be replaced by MerLin).
+
 ## Getting Started
 
 ### Setup
@@ -18,12 +33,6 @@ You can also train 'Dagonet' (composed of the 'Odysseus' feature map and the 'Go
 ```bash
 make mnist-dagonet
 ```
-
-In another terminal, you can visualize the accuracy/loss advancement in live-time by doing:
-```bash
-make board
-```
-Then go to `http://localhost:6006/?darkMode=true#scalars` on your browser.
 
 **About output interpretation**
 
@@ -78,11 +87,6 @@ Everything related to training hyperparameters such as optimizer, objective func
 
 ### [Inference](./qml/inference/)
 Some tools to evaluate an existing / already trained model.
-
-## MerLin
-This small QML framework is not -yet- based on [MerLin](https://merlinquantum.ai/) from Quandela. 
-
-Effort must be made on the [qconv2d layer](./qml/models/layers/quantum/qconv_2d.py) which is based on the [SLOS directory](./qml/models/layers/quantum/slos) (which must be replaced by MerLin).
 
 
 ## Team Members

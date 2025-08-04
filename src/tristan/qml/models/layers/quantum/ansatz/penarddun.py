@@ -4,7 +4,6 @@ import perceval as pcvl
 from typing import Tuple
 
 from qml.models.layers.quantum.ansatz.register import register
-from sympy import pi
 
 
 @register

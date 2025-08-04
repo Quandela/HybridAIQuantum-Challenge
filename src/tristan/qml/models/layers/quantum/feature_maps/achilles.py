@@ -12,7 +12,6 @@ class AchillesBuilder:
     TYPE = "achilles"
     # Best mode indexation is based on circuit analysis to send PCA feature into most probable output
     INDEXES_9 = torch.Tensor([3, 7, 8, 4, 2, 5, 1, 0, 6]).to(torch.int32)
-    # INDEXES_10 = torch.Tensor([4, 8, 9, 5, 3, 6, 2, 7, 1, 0]).to(torch.int32)
 
     @classmethod
     def make(cls, x: torch.Tensor, **kwargs) -> FeatureMapParams:
@@ -44,9 +43,6 @@ class AchillesBuilder:
 
         # Input state
         input_state = pcvl.BasicState("|0,0,1,0,0,0,1,0,0>")
-        # input_state = pcvl.BasicState("|0,0,0,1,0,0,0,1,0,0>")
-
-        # pcvl.pdisplay(circuit, output_format=None, recursive=True)
 
         return FeatureMapParams(
             circuit=circuit,
