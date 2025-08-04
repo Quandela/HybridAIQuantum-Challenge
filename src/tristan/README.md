@@ -24,7 +24,7 @@ make install
 ```
 
 ### Training
-_==> You need to uncomment the Fire(Main) inside [main.py](main.py) first_s
+_==> You need to uncomment the Fire(Main) inside [main.py](main.py) first_
 
 To train our quantum ML model baseline 'Tristan' (composed of the 'Achilles' feature map and the 'Pernarddun' ansatz):
 ```bash
