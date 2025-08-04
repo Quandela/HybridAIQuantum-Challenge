@@ -24,13 +24,6 @@ clear:
 board:
 	tensorboard --logdir=tb_logs/
 
-.PHONY: tarball
-tarball: clear
-	mkdir qaradoq-p2
-	cp -r main.py Makefile README.md requirements.txt resources qml docs qaradoq-p2
-	zip -r qaradoq-p2.zip qaradoq-p2
-	rm -rf qaradoq-p2
-
 .PHONY: board
 pca:
 	${TRAIN} --topology=pca --batch-size=-1 --epochs=1 --topology-extra={components:12}
