@@ -135,10 +135,13 @@ class Main(object):
 
 
 if __name__ == "__main__":
-    # Original behaviour
+    # ==> Original behaviour
     # from fire import Fire
     # Fire(Main)
 
-    # Updated behaviour for current github repository:
+    # ==> Updated behaviour for current github repository:
     # run training with all default hyper parameters
     Main().train()
+
+    # ==> Uncomment to run the classical network "equivalent"
+    # Main().train(topology="dummy_conv_2d")

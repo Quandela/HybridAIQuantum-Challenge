@@ -6,5 +6,6 @@ from .mordred import *
 from .artorius import *
 from .dagonet import *
 from .tristan import *
+from .examples import *
 
 from .topology import TopologyParams, Topology, build_topology
