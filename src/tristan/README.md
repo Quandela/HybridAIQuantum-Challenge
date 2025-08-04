@@ -24,7 +24,7 @@ make install
 ```
 
 ### Training
-==> You need to uncomment the Fire(Main) inside [main.py](main.py) first
+_==> You need to uncomment the Fire(Main) inside [main.py](main.py) first_s
 
 To train our quantum ML model baseline 'Tristan' (composed of the 'Achilles' feature map and the 'Pernarddun' ansatz):
 ```bash
@@ -45,7 +45,7 @@ To use the "cumulative" method (sum of probabilities), edit `qml/models/layers/q
 
 
 ### Inference
-==> You need to uncomment the Fire(Main) inside [main.py](main.py) first
+_==> You need to uncomment the Fire(Main) inside [main.py](main.py) first_
 
 To put an trained model in inference mode:
 ```bash
