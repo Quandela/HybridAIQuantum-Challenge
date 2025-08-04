@@ -135,7 +135,7 @@ class Main(object):
 
 
 if __name__ == "__main__":
-    # ==> Original behaviour
+    # ==> Uncomment 2 next line to get original behaviour
     # from fire import Fire
     # Fire(Main)
 
