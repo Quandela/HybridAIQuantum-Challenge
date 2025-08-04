@@ -3,11 +3,11 @@
 ## IMPORTANT NOTES!
 
 ### To run it
-The codebase was made during the First Perceval Quest by [Quandela](quandela.com) and [Scaleway](scaleway.com).
-Few modification were done to make it run 'as it':
+The codebase was made during the First Perceval Quest by [Quandela](https://quandela.com) and [Scaleway](https://scaleway.com).
+Few modifications were done to make it run 'as it':
 
 ```bash
-python3 main.py # should be enough to train the model
+python3 main.py # should be enough to train the Tristan model
 ```
 
 ### MerLin update
@@ -24,6 +24,8 @@ make install
 ```
 
 ### Training
+==> You need to update [main.py](main.py) first
+
 To train our quantum ML model baseline 'Tristan' (composed of the 'Achilles' feature map and the 'Pernarddun' ansatz):
 ```bash
 make mnist-tristan
@@ -42,13 +44,9 @@ To use the "cumulative" method (sum of probabilities), edit `qml/models/layers/q
 - Uncomment the lines tagged "Output - CUMULATIVE"
 
 
-**Tips**: for faster training during development phase, use shorter training and validation sets.
-Simply provide your desired set sizes and `shorten_dataset.sh` script does it for you!
-```
-./resources/mnist_partial/shorten_dataset.sh 601 201
-```
-
 ### Inference
+==> You need to update [main.py](main.py) first
+
 To put an trained model in inference mode:
 ```bash
 python3 main.py predict --model-directory path/to/model/dir/
