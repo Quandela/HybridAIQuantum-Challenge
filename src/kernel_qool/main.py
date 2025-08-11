@@ -9,8 +9,8 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
-# Helper class
-from utils import MNIST_partial
+# Helper class and functions
+from utils import MNIST_partial, save_confusion_matrix_png
 
 class QuantumKernel:
     """
@@ -39,7 +39,7 @@ class QuantumKernel:
         self.n = n
         self.processor = pcvl.Processor("SLOS", self.m)
         self.dist_cache = {}  # Cache for precomputed probability distributions
-        print(f"[QuantumKernel] Initialized with {self.m} modes, {self.n} photons")
+        print(f"\n[QuantumKernel] Initialized with {self.m} modes, {self.n} photons")
 
     def _create_circuit(self, features: np.ndarray) -> pcvl.Circuit:
         """
@@ -242,19 +242,22 @@ class QuantumSVM:
         os.makedirs(self.dir_save, exist_ok=True)
 
         # Save the kernel matrix to a file with a parameter-based filename
-        filename = f"{self.dir_save}/quantum_kernel_train_m{self.m}_n{self.n}.npy"
-        np.save(filename, K_train)
+        filename = f"{self.dir_save}/quantum_kernel_train_m{self.m}_n{self.n}.csv"
+        np.savetxt(filename, K_train, delimiter=',')
         print(f"[INFO] Saved quantum kernel matrix to '{filename}'.")
 
         # Transform the kernel if needed
         if kernel_type == "poly":
-            gamma = kernel_args["gamma"]
-            coef = kernel_args["coef"]
+            if kernel_args["gamma"] == 'auto':
+                gamma = 1.0 / (X_train.shape[1] * X_train.var())
+            else:
+                gamma = kernel_args["gamma"]
+            coef = kernel_args["coef0"]
             degree = kernel_args["degree"]
             K_train = (gamma * K_train + coef) ** degree
         elif kernel_type == "sigmoid":
             alpha = kernel_args["alpha"]
-            coef = kernel_args["coef"]
+            coef = kernel_args["coef0"]
             K_train = np.tanh(alpha * K_train + coef)
 
         self.kernel_train_ = K_train
@@ -289,18 +292,21 @@ class QuantumSVM:
         K_test = self.qkernel_.compute_qkernel_block(X_test, self.X_train_)
 
         # Save the test kernel matrix
-        filename = f"{self.dir_save}/quantum_kernel_test_m{self.m}_n{self.n}.npy"
-        np.save(filename, K_test)
+        filename = f"{self.dir_save}/quantum_kernel_test_m{self.m}_n{self.n}.csv"
+        np.savetxt(filename, K_test, delimiter=',')
 
         # Transform the kernel if needed
         if kernel_type == "poly":
-            gamma = kernel_args["gamma"]
-            coef = kernel_args["coef"]
+            if kernel_args["gamma"] == 'auto':
+                gamma = 1.0 / (self.X_train_.shape[1] * self.X_train_.var())
+            else:
+                gamma = kernel_args["gamma"]
+            coef = kernel_args["coef0"]
             degree = kernel_args["degree"]
             K_test = (gamma * K_test + coef) ** degree
         elif kernel_type == "sigmoid":
             alpha = kernel_args["alpha"]
-            coef = kernel_args["coef"]
+            coef = kernel_args["coef0"]
             K_test = np.tanh(alpha * K_test + coef)
 
         preds = self.svc_.predict(K_test)
@@ -316,7 +322,9 @@ def run_training(
     svc_args={"C": 10.0, "decision_function_shape": "ovr"},
     kernel_type="standard",
     kernel_args=None,
-    dir_save="qkernel"
+    dir_save="qkernel",
+    n_train = 600,
+    n_val = 60,
 ):
     """
     Trains a quantum support vector machine (QuantumSVM) model using the MNIST dataset.
@@ -361,11 +369,11 @@ def run_training(
     for images, labels in val_loader:
         X_val_full = images.reshape(len(val_dataset), -1).numpy()      # shape [N, 784]
         y_val_full = labels.numpy()
-
-    X_train_full = X_train_full[:600]
-    y_train_full = y_train_full[:600]
-    X_val_full = X_val_full[:60]
-    y_val_full = y_val_full[:60]
+    print(f"[INFO] Reducing the number of samples to {n_train} samples in training set and {n_val} samples in validation set ...")
+    X_train_full = X_train_full[:n_train]
+    y_train_full = y_train_full[:n_train]
+    X_val_full = X_val_full[:n_val]
+    y_val_full = y_val_full[:n_val]
     print(f"[INFO] Original shapes: Train={X_train_full.shape}, Val={X_val_full.shape}")
 
     # 3) PCA -> n_components components
@@ -396,7 +404,132 @@ def run_training(
     val_preds = qsvm.predict(X_val_scaled, kernel_type, kernel_args)
 
     # 7) Evaluate
+    # Accuracy and Classification report
     acc = accuracy_score(y_val_full, val_preds)
     print(f"[RESULT] Validation Accuracy = {acc:.4f}")
     print("Classification Report:\n", classification_report(y_val_full, val_preds))
-    print("Confusion Matrix:\n", confusion_matrix(y_val_full, val_preds))
+    # Confusion matrix (computation and save as png)
+    cm = confusion_matrix(y_val_full, val_preds)
+    print("Confusion Matrix:\n", cm)
+    save_confusion_matrix_png(
+        cm, 
+        class_labels=sorted(set(y_val_full)), 
+        filename=f"{dir_save}/confusion_matrix_m{m_modes}_n{n_photons}.png",
+        title=f"Confusion Matrix - Quantum SVM (m={m_modes}, n={n_photons})"
+    )
+
+
+def run_classical_training(
+    data_path="./data",
+    random_seed=42,
+    n_components=10,
+    kernel_type="linear",
+    dir_save="classical",
+    n_train=600,
+    n_val=60,
+):
+    """
+    Trains a classical support vector machine (SVM) model using the MNIST dataset.
+
+    Args:
+        data_path (str): Path to the directory containing the MNIST dataset.
+        random_seed (int): Random seed for reproducibility.
+        n_components (int): Number of principal components to retain after applying PCA.
+        kernel_type (str): Type of SVM kernel ('linear', 'poly', 'rbf', 'sigmoid').
+        svc_args (dict): Additional arguments for the SVM classifier.
+        dir_save (str): Directory name where results will be saved.
+        n_train (int): Number of training samples to use.
+        n_val (int): Number of validation samples to use.
+
+    Returns:
+        None. The function prints evaluation metrics including validation accuracy, classification report, and confusion matrix.
+    """
+    print(f"\n Training classical SVM")
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+
+    # 1) Load dataset
+    train_dataset = MNIST_partial(data=data_path, split="train")
+    val_dataset = MNIST_partial(data=data_path, split="val")
+
+    # We load them fully (just once)
+    train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
+    val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
+
+    # 2) Process data
+    for images, labels in train_loader:
+        X_train_full = images.reshape(len(train_dataset), -1).numpy()  # shape [N, 784]
+        y_train_full = labels.numpy()
+
+    for images, labels in val_loader:
+        X_val_full = images.reshape(len(val_dataset), -1).numpy()      # shape [N, 784]
+        y_val_full = labels.numpy()
+    
+    print(f"[INFO] Reducing the number of samples to {n_train} samples in training set and {n_val} samples in validation set ...")
+    X_train_full = X_train_full[:n_train]
+    y_train_full = y_train_full[:n_train]
+    X_val_full = X_val_full[:n_val]
+    y_val_full = y_val_full[:n_val]
+    print(f"[INFO] Original shapes: Train={X_train_full.shape}, Val={X_val_full.shape}")
+
+    # 3) PCA -> n_components components
+    pca = PCA(n_components=n_components)
+    X_train_pca = pca.fit_transform(X_train_full)
+    X_val_pca   = pca.transform(X_val_full)
+    print(f"[INFO] After PCA: Train shape={X_train_pca.shape}, Val shape={X_val_pca.shape}")
+
+    # Normalize PCA outputs to [0,1] range
+    scaler = MinMaxScaler(feature_range=(0,1))
+    X_train_scaled = scaler.fit_transform(X_train_pca)
+    X_val_scaled = scaler.transform(X_val_pca)
+
+    # 4) Build Classical SVM
+    print(f"[INFO] Training Classical SVM with {kernel_type} kernel...")
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(dir_save, exist_ok=True)
+    
+    # Initialize and fit the SVM classifier
+    svm_model = SVC(kernel=kernel_type) if kernel_type!= "sigmoid" else SVC(kernel='sigmoid', C=100, gamma=0.1, coef0=1)
+    svm_model.fit(X_train_scaled, y_train_full)
+    print("[INFO] Classical SVM training complete.")
+
+    # 5) Predict on the validation set
+    print("[INFO] Predicting on validation set...")
+    val_preds = svm_model.predict(X_val_scaled)
+
+    # 6) Evaluate
+    # Accuracy and Classification report
+    acc = accuracy_score(y_val_full, val_preds)
+    print(f"[RESULT] Validation Accuracy = {acc:.4f}")
+    print("Classification Report:\n", classification_report(y_val_full, val_preds))
+    
+    # Confusion matrix (computation and save as png)
+    cm = confusion_matrix(y_val_full, val_preds)
+    print("Confusion Matrix:\n", cm)
+    save_confusion_matrix_png(
+        cm, 
+        class_labels=sorted(set(y_val_full)), 
+        filename=f"{dir_save}/confusion_matrix_classical_{kernel_type}.png",
+        title=f"Confusion Matrix - Classical SVM ({kernel_type} kernel)"
+    )
+
+
+if __name__ == "__main__":
+    DATA_PATH = "../../data/"
+    kernel_types = ["linear", "poly", "sigmoid"]
+    kernel_args = {"linear": {"C": 10.0, "decision_function_shape": "ovr"},
+                   "poly": {"degree": 2, "gamma": 'auto', "coef0":-1},
+                   "sigmoid": {"coef0": 0, "alpha": 1.0}}
+    for kernel in kernel_types:
+        print(f"\n -------- \n With {kernel} kernel \n --------\n")
+        run_training(data_path=DATA_PATH,
+                     kernel_type=kernel,
+                     kernel_args=kernel_args[kernel],
+                     n_train = 600,
+                     n_val = 60)
+
+        run_classical_training(data_path=DATA_PATH,
+                               kernel_type=kernel,
+                               n_train=600,
+                               n_val=60)
