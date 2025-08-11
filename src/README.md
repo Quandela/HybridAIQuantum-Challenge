@@ -44,7 +44,7 @@ Inspired by [S. Shi, et al](https://arxiv.org/pdf/2303.03707), our implementatio
    - Classical fully connected layers
 
 ```bash
-python main.py --model single --epochs 10 --data-dir ./data
+python main.py --model single --epochs 10
 ```
 
 2. **Two Layer Model** (`Type2_TrainableKernel__Hybrid__2_layers`)
@@ -53,7 +53,7 @@ python main.py --model single --epochs 10 --data-dir ./data
 
 Two quantum layer model:
 ```bash
-python main.py --model 2layer --epochs 10 --data-dir ./data
+python main.py --model 2layer --epochs 10
 ```
 
 3. **Combined Model** (`Type2_TrainableKernel__Hybrid__2_layers__combined_parallel`)
@@ -62,13 +62,13 @@ python main.py --model 2layer --epochs 10 --data-dir ./data
    - Best performance from the notebook examples
 
 ```bash
-python main.py --model combined --epochs 10 --data-dir ./data
+python main.py --model combined --epochs 10
 ```
 
 ### Example with all options
 ```bash
 python main.py --model combined --epochs 20 --batch-size 64 --lr 1e-5 \
-                --data-dir ./data --save-model ./trained_model.pth \
+                --save-model ./trained_model.pth \
                 --save-embeddings --log-dir ./training_logs
 ```
 

@@ -138,8 +138,6 @@ def main():
     parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--batch-size', type=int, default=32, help='Batch size for training')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
-    parser.add_argument('--data-dir', type=str, default='./data', 
-                       help='Directory containing MNIST .npy files')
     parser.add_argument('--save-model', type=str, default=None, 
                        help='Path to save trained model')
     parser.add_argument('--load-model', type=str, default=None,
