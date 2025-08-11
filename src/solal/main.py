@@ -10,7 +10,7 @@ import perceval as pcvl
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
-from utils import create_circuit, hybridModel, training, MNIST_partial
+from utils import create_circuit, hybridModel, training
 import matplotlib.pyplot as plt
 from merlin.datasets import mnist_digits
 
@@ -92,5 +92,4 @@ if __name__ == "__main__":
     X_train, y_train, X_test, y_test, d = load_data()
     train_accs, test_accs = train_model(X_train, y_train, X_test, y_test, d=d)
     plot_training_curves(train_accs, test_accs)
-
 
