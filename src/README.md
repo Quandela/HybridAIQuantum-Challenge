@@ -18,10 +18,7 @@ Besides MNIST, the quantum layer is also shown to work with some classical non l
 ### To train and test the model
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python src/main.py
+python solal/main.py
 ```
 
 ## A Photonic Quantum Neural Network
