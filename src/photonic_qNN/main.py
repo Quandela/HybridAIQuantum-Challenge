@@ -67,10 +67,10 @@ def main():
     circuit = create_quantum_circuit(MODES, size = INPUT_SIZE, frequency = FREQUENCY)
     # build QuantumLayer (nn.Module) from circuit
     boson_layer = QuantumLayer(
-        input_size=INPUT_SIZE * FREQUENCY,
+        input_size=INPUT_SIZE,
         output_size=math.comb(MODES + photons_count - 1, photons_count),  # but we do not use it
         circuit=circuit,
-        trainable_parameters=[p.name for p in circuit.get_parameters() if not p.name.startswith("px")],
+        trainable_parameters=["phase", "bs"],
         input_parameters = ["px"],
         input_state=input_state,
         output_mapping_strategy=OutputMappingStrategy.NONE,
@@ -107,7 +107,7 @@ def main():
 
     print(f" --- Training the quantum kernel")
 
-    q_train_losses, q_val_losses, best_q_acc, q_train_accs, q_val_accs = train_model(q_model, train_loader, val_loader, num_epochs=EPOCHS, lr = LR, frequency = FREQUENCY)
+    q_train_losses, q_val_losses, best_q_acc, q_train_accs, q_val_accs = train_model(q_model, train_loader, val_loader, num_epochs=EPOCHS, lr = LR, frequency = FREQUENCY, quantum = True)
     if args.display:
         visualize_scale_parameters(q_model[0])
         # save qLayer if needed

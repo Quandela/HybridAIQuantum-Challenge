@@ -219,6 +219,7 @@ class ScaleLayer(nn.Module):
     def __init__(self, dim, scale_type = "learned"):
         super(ScaleLayer, self).__init__()
         # Create a single learnable parameter (initialized to 1.0 by default)
+        # Caution: MerLin already mutltiplies by pi
         if scale_type == "learned":
             self.scale = nn.Parameter(torch.rand(dim))
         elif scale_type == "2pi":
@@ -237,7 +238,7 @@ class ScaleLayer(nn.Module):
 ## Model training and evaluation ##
 ###################################
 
-def train_model(model, train_loader, val_loader, num_epochs = 25, lr=0.01, frequency = 1):
+def train_model(model, train_loader, val_loader, num_epochs = 25, lr=0.01, frequency = 1, quantum = False):
     # train classical baseline
     criterion = nn.CrossEntropyLoss()
     # Betas from the ablation study
@@ -257,7 +258,8 @@ def train_model(model, train_loader, val_loader, num_epochs = 25, lr=0.01, frequ
         for batch_X, batch_y in tqdm(train_loader):
             # Forward pass
             batch_X = batch_X.repeat(1, 1, frequency)
-
+            if quantum:
+                batch_X = batch_X/torch.pi
             outputs = model(batch_X.squeeze(0).float())
             loss = criterion(outputs, batch_y) #.view(-1, 1).float()
             # Backward pass and optimization
@@ -282,6 +284,8 @@ def train_model(model, train_loader, val_loader, num_epochs = 25, lr=0.01, frequ
         #for batch_X, batch_y in val_loader:
         for batch_X, batch_y in tqdm(val_loader):
             batch_X = batch_X.repeat(1, 1, frequency)
+            if quantum:
+                batch_X = batch_X/torch.pi
             outputs = model(batch_X.squeeze(0).float())
             test_loss = criterion(outputs, batch_y) #.view(-1, 1).float()
             total_test_loss += test_loss.item()
