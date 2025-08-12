@@ -88,7 +88,7 @@ class SSL_q_loss(nn.Module):
         else:
             pseudo_output_size = math.comb(self.modes+self.modes//2 -1,self.modes//2) if self.no_bunching else math.comb(self.modes,self.modes//2)
             self.projector = nn.Linear(self.backbone_features, pseudo_output_size)
-            self.criterion = InfoNCELoss()
+            self.criterion = InfoNCELoss(temperature = args.temperature)
 
         if not args.trained:
             self.projector.requires_grad_(False)
@@ -214,7 +214,7 @@ def linear_evaluation(model, train_loader, val_loader, args):
         train_accs.append(avg_train_acc)
         val_accs.append(avg_val_acc)
 
-        print(f"Epoch {epoch + 1}/{args.epochs}: Train Acc = {avg_train_acc:.4f}, Val Acc = {avg_val_acc:.4f}")
+        print(f"Epoch {epoch + 1}/{args.ft_epochs}: Train Acc = {avg_train_acc:.4f}, Val Acc = {avg_val_acc:.4f}")
 
     return model, train_losses, val_losses, train_accs, val_accs
 
