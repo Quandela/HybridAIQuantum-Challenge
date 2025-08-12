@@ -7,6 +7,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import pickle
 import argparse
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*thresholded_output.*")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using {device}")
@@ -123,8 +125,11 @@ for epoch in range(epochs):
     scheduler.step()
     print(f"Epoch {epoch+1}, Train Acc = {training_accs:.3f}%, Train Loss = {training_losses:.6f}, Eval Acc = {validation_acc:.3f}%, Eval Loss = {validation_loss:.6f}")
 
+model_state_path = save_path.replace('.pkl', '_model.pth')
+torch.save(model.state_dict(), model_state_path)
+
 with open(save_path, 'wb') as f:
-    pickle.dump((losses, accuracies, train_acc, val_acc, train_loss, val_loss, "QNN" if qnn else "CNN", model.state_dict(), str(model)), f)
+    pickle.dump((losses, accuracies, train_acc, val_acc, train_loss, val_loss, "QNN" if qnn else "CNN", model_state_path, str(model)), f)
 
 print("Saved")
 

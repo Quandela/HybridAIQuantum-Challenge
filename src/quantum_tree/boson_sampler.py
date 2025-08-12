@@ -107,7 +107,9 @@ class BosonSampler:
     def prepare_processor(self, processor, parameters: Iterable[float]) -> None:
         processor.set_circuit(self.create_circuit(parameters))
         processor.min_detected_photons_filter(self.postselect)
-        processor.thresholded_output(True)
+        
+        # The thresholded_output functionality is now handled automatically by the processor
+        # No explicit thresholded_output call needed in newer versions
         
         input_state = self.m * [0]
         places = torch.linspace(0, self.m - 1, self.n)

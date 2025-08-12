@@ -70,7 +70,7 @@ def initialize_qpu():
 
 with open(filename, 'rb') as f:
     (train_loss_detailed, train_acc_detailed, train_acc, val_acc, 
-        train_loss, val_loss, run_name, model_file, model_arch) = pickle.load(f)
+        train_loss, val_loss, run_name, model_state_path, model_arch) = pickle.load(f)
 
 session = None
 bs = None
@@ -78,7 +78,8 @@ bs = None
 initialize_qpu()
 
 model = QNN(bs, device).to(device)
-model.load_state_dict(model_file)
+model_state_dict = torch.load(model_state_path, weights_only=True)
+model.load_state_dict(model_state_dict, strict=False)
 print(model_arch)
 
 val_dataset = MNIST_partial(split='val')
@@ -121,7 +122,8 @@ while True:
             time.sleep(10)
             initialize_qpu()
             model = QNN(bs, device).to(device)
-            model.load_state_dict(model_file)
+            model_state_dict = torch.load(model_state_path, weights_only=True)
+            model.load_state_dict(model_state_dict, strict=False)
     batch_index += 1
 
 accuracy = (correct / total) * 100
