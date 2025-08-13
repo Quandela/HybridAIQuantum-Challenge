@@ -23,7 +23,7 @@ parser.add_argument('--cnn', action='store_true', default=False, help='backbone 
 parser.add_argument('--enc-dim', type=int, default=[8, 8], nargs='+',
                         help='Dimensions of the encoder')
 # Contrastive Loss
-parser.add_argument('-tau', '--temperature', type=float, default=0.07, help='Temperature of the InfoNCELoss')
+parser.add_argument('-tau', '--temperature', type=float, default=0.7, help='Temperature of the InfoNCELoss')
 # quantum SSL
 parser.add_argument('-w', '--width', type=int, default=8, help='Dimension of the features encoded in the QNN')
 parser.add_argument('-quant', '--quantum', action='store_true', default=False, help='Set if we use Quantum SSL')
@@ -54,7 +54,7 @@ class SSL_q_loss(nn.Module):
     def __init__(self,
                  args,
                  backbone,
-                 similarity = InfoNCELoss()
+                 similarity = InfoNCELoss(),
                  ):
         super().__init__()
 

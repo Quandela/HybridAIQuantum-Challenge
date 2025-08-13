@@ -335,7 +335,7 @@ def create_quantum_circuit(modes = 10, feature_size = 10):
 
 ### InfoNCE Loss ###
 class InfoNCELoss(torch.nn.Module):
-    def __init__(self, temperature=0.5):
+    def __init__(self, temperature=0.07):
         super(InfoNCELoss, self).__init__()
         self.temperature = temperature
 

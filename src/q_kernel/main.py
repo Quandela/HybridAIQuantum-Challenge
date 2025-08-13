@@ -11,6 +11,11 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
 # Helper class and functions
 from utils import MNIST_partial, save_confusion_matrix_png
+from pathlib import Path
+
+script_dir = Path(__file__).parent
+data_path_train = (script_dir / ".." / ".."/ ".." / ".." / "data" / "train.csv").resolve()
+data_path_val = (script_dir / ".." / ".."/ ".." / ".." / "data" / "val.csv").resolve()
 
 class QuantumKernel:
     """
@@ -516,7 +521,9 @@ def run_classical_training(
 
 
 if __name__ == "__main__":
-    DATA_PATH = "../../data/"
+
+    script_dir = Path(__file__).parent
+    DATA_PATH= (script_dir / ".." / ".." / "data").resolve()
     kernel_types = ["linear", "poly", "sigmoid"]
     kernel_args = {"linear": {"C": 10.0, "decision_function_shape": "ovr"},
                    "poly": {"degree": 2, "gamma": 'auto', "coef0":-1},

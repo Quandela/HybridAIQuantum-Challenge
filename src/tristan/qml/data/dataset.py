@@ -2,7 +2,13 @@ import re
 import torch
 
 from torch.utils.data import Dataset
+from pathlib import Path
 
+script_dir = Path(__file__).parent
+data_path_train = (script_dir / ".." / ".."/ ".." / ".." / "data" / "train.csv").resolve()
+data_path_val = (script_dir / ".." / ".."/ ".." / ".." / "data" / "val.csv").resolve()
+
+# Set a default data path relative to script
 
 _MNIST_IMAGE_SHAPE = (1, 28, 28)
 _MNIST_CLASSES_SHAPE = (10,)
@@ -67,13 +73,13 @@ class LocalMirrorMnistDataset(Dataset):
 
 
 def get_partial_mnist_mirror_dataset():
-    training_dataset = LocalMirrorMnistDataset(path="../../data/train.csv")
+    training_dataset = LocalMirrorMnistDataset(path=data_path_train)
 
     return training_dataset, _MNIST_IMAGE_SHAPE, _MNIST_IMAGE_SHAPE
 
 
 def get_partial_mnist_classification_dataset():
-    training_dataset = LocalMnistDataset(path="../../data/train.csv")
+    training_dataset = LocalMnistDataset(path=data_path_train)
 
     return training_dataset, _MNIST_IMAGE_SHAPE, _MNIST_CLASSES_SHAPE
 
@@ -90,12 +96,12 @@ def get_full_mnist_classification_dataset():
 
 
 def get_validation_mnist_classification_dataset():
-    validation_dataset = LocalMnistDataset(path="../../data/val.csv")
+    validation_dataset = LocalMnistDataset(path=data_path_val)
 
     return validation_dataset, _MNIST_IMAGE_SHAPE, _MNIST_CLASSES_SHAPE
 
 
 def get_validation_mnist_mirror_dataset():
-    validation_dataset = LocalMirrorMnistDataset(path="../../data/val.csv")
+    validation_dataset = LocalMirrorMnistDataset(path=data_path_val)
 
     return validation_dataset, _MNIST_IMAGE_SHAPE, _MNIST_IMAGE_SHAPE

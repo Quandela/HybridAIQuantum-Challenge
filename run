@@ -1,0 +1,9 @@
+#! /bin/bash
+#!/bin/bash
+if [ "$1" = "photonic_SSL" ]; then
+    python3 "src/$1/main.py" --quantum
+elif [ "$1" = "GLASE" ]; then
+    python3 "src/GLASE/train.py"
+else
+    python3 "src/$1/main.py"
+fi

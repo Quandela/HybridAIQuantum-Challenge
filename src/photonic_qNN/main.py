@@ -105,7 +105,7 @@ def main():
     EPOCHS = args.epochs
     LR = args.lr
 
-    print(f" --- Training the quantum kernel")
+    print(f" --- Training the quantum NN")
 
     q_train_losses, q_val_losses, best_q_acc, q_train_accs, q_val_accs = train_model(q_model, train_loader, val_loader, num_epochs=EPOCHS, lr = LR, frequency = FREQUENCY, quantum = True)
     if args.display:
@@ -114,7 +114,7 @@ def main():
         #torch.save(q_model[0].state_dict(), 'scale_layer_trained_5.pt')
 
     # train classical baseline
-    print(f" --- Training the classical kernel (linear)")
+    print(f" --- Training the classical NN (linear)")
     cl_train_losses, cl_val_losses, best_cl_acc, cl_train_accs, cl_val_accs = train_model(model, train_loader, val_loader, num_epochs=EPOCHS, lr = 0.01)
 
     ### APPLY SVM ###
