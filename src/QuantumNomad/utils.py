@@ -5,6 +5,10 @@ import re
 import torch
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+from pathlib import Path
+
+script_dir = Path(__file__).parent
+data_path = (script_dir / ".." / ".." / "data" ).resolve()
 
 ################
 ## DATA UTILS ##
@@ -20,10 +24,10 @@ import re
 
 import numpy as np
 import perceval as pcvl
-from pqnn_model import QuantumLayer, OutputMappingStrategy
+from merlin import QuantumLayer, OutputMappingStrategy
 
 class MNIST_quantum(Dataset):
-    def __init__(self, data = './data', transform=None, split = 'train'):
+    def __init__(self, data = data_path, transform=None, split = 'train'):
         """
         Args:
             data: path to dataset folder which contains train.csv and val.csv
@@ -105,19 +109,20 @@ class MNIST_quantum(Dataset):
         return img_square, label
 
 class MNIST_partial2(Dataset):
-    def __init__(self, data='./data', transform=None, split='train', digits=[2, 5]):
+    def __init__(self, data=data_path, transform=None, split='train', digits=[2, 5]):
         """
         Args:
             data: Path to dataset folder containing train.csv and val.csv
             transform: Optional transform to apply (e.g., normalization)
             split: 'train' or 'val' to select dataset
-            digits: List of digits to filter (e.g., [2, 5])
+            digits: List of digits to filter (e.g., [2, 5, 7])
         """
         self.data_dir = data
         self.transform = transform
         self.data = []
-        self.digits = digits
-        
+        self.digits = sorted(digits)  # Sort for consistent mapping
+        self.digit_to_class = {digit: idx for idx, digit in enumerate(self.digits)}
+        print(f"- Chosen digits: {digits} (mapped to classes 0-{len(digits)-1})")
         if split == 'train':
             filename = os.path.join(self.data_dir, 'train.csv')
         elif split == 'val':
@@ -137,8 +142,8 @@ class MNIST_partial2(Dataset):
         img = self.df['image'].iloc[idx]
         label = self.df['label'].iloc[idx]
 
-        # Convert label: Map chosen digits to {0, 1}
-        label = 0 if label == self.digits[0] else 1
+        # Convert label: Map chosen digits to sequential classes (0, 1, 2, ...)
+        label = self.digit_to_class[label]
 
         # Convert image string to tensor
         img_list = re.split(r',', img)
@@ -154,7 +159,7 @@ class MNIST_partial2(Dataset):
 
 
 class MNIST_partial(Dataset):
-    def __init__(self, data = './data', transform=None, split = 'train'):
+    def __init__(self, data = data_path, transform=None, split = 'train'):
         """
         Args:
             data: path to dataset folder which contains train.csv and val.csv

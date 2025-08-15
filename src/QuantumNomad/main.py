@@ -5,11 +5,12 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import perceval as pcvl
-
+import numpy as np
 from boson_sampler import BosonSampler
 from utils import MNIST_partial2, accuracy, plot_training_metrics
-from pqnn_model import QuantumLayer, OutputMappingStrategy
+from merlin import QuantumLayer, OutputMappingStrategy
 
+# DEPRECATED !! Now, we advise to install MerLin using pip install merlinquantum
 
 def build_encoding_circuit(modes, hidden_dim):
     encoding_circuit = pcvl.Circuit(modes)
@@ -74,47 +75,99 @@ def train_model(model, optimizer, num_epochs, train_loader, val_loader, device):
 
     plot_training_metrics(history_train_accuracy, history_val_accuracy, history_train_loss, history_val_loss)
 
+def info_on_dataset(train_dataset, val_dataset):
+    # print some information on the data
+    print(f"Training dataset size: {len(train_dataset)}")
+    print(f"Validation dataset size: {len(val_dataset)}")
+
+    # Get data shape from first sample
+    sample_data, _ = train_dataset[0]
+    print(f"Data shape: {sample_data.shape}")
+    train_labels = [train_dataset[i][1] for i in range(len(train_dataset))]
+    val_labels = [val_dataset[i][1] for i in range(len(val_dataset))]
+
+    # Get unique labels and counts
+    train_unique, train_counts = np.unique(train_labels, return_counts=True)
+    val_unique, val_counts = np.unique(val_labels, return_counts=True)
+
+    print("Training set:")
+    for label, count in zip(train_unique, train_counts):
+        print(f"  Label {label}: {count}")
+
+    print("Validation set:")
+    for label, count in zip(val_unique, val_counts):
+        print(f"  Label {label}: {count}")
+
 
 def main(args):
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
 
-    train_dataset = MNIST_partial2(split='train')
-    val_dataset = MNIST_partial2(split='val')
+    print(f"\n == Loading MNIST dataset ==")
+    train_dataset = MNIST_partial2(split='train', digits = args.digits)
+    val_dataset = MNIST_partial2(split='val', digits = args.digits)
+
+    info_on_dataset(train_dataset, val_dataset)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
+    print(" == Data loaded == \n")
 
-    pretrained_model = torchvision.models.resnet18(weights='IMAGENET1K_V1')
+    print("\n == Building the model ==")
+    print(" - From ResNet18 pretrained on ImageNet")
+    pretrained_model = torchvision.models.resnet18(weights='IMAGENET1K_V1') if not args.random else torchvision.models.resnet18()
+    print(" - Changing the first convolution to match MNIST unique channel")
     pretrained_model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
-    encoding_circuit = build_encoding_circuit(args.modes, args.hidden_dim)
-    trainable_circuit = build_trainable_circuit(args.modes)
+    if args.quantum:
+        print("\n - Building quantum circuit with Perceval")
+        encoding_circuit = build_encoding_circuit(args.modes, args.hidden_dim)
+        trainable_circuit = build_trainable_circuit(args.modes)
 
-    circuit = pcvl.Circuit(args.modes)
-    circuit.add(0, encoding_circuit, merge=True)
-    circuit.add(0, trainable_circuit, merge=True)
+        circuit = pcvl.Circuit(args.modes)
+        circuit.add(0, encoding_circuit, merge=True)
+        circuit.add(0, trainable_circuit, merge=True)
+        input_state = [(i + 1) % 2 for i in range(args.modes)]
 
-    input_state = [(i + 1) % 2 for i in range(args.modes)]
+        print(" - Merging this circuit as a TorchModule with MerLin")
+        qlayer = QuantumLayer(
+            input_size=args.hidden_dim,
+            output_size=len(args.digits),
+            circuit=circuit,
+            input_state=input_state,
+            trainable_parameters=[p.name for p in circuit.get_parameters() if not p.name.startswith("feat")],
+            input_parameters = ["feat"],
+            output_mapping_strategy=OutputMappingStrategy.LINEAR
+        )
 
-    qlayer = QuantumLayer(
-        input_size=args.hidden_dim,
-        output_size=2,
-        circuit=circuit,
-        input_state=input_state,
-        trainable_parameters=[p.name for p in circuit.get_parameters() if not p.name.startswith("feat")],
-        output_mapping_strategy=OutputMappingStrategy.LINEAR
-    )
+        class DivideByPi(nn.Module):
+            def forward(self, x):
+                return x / torch.pi
+        print(" - Quantum circuit initialised !")
+        print(" - Changing the last FC layer")
+        pretrained_model.fc = nn.Sequential(
+            nn.Linear(512, args.hidden_dim),
+            torch.nn.Sigmoid(),
+            DivideByPi(),
+            qlayer
+        )
+    else:
+        print("\n - Building a classical classification head")
 
-    pretrained_model.fc = nn.Sequential(
-        nn.Linear(512, args.hidden_dim),
-        qlayer
-    )
+        pretrained_model.fc = nn.Sequential(
+            nn.Linear(512, args.hidden_dim),
+            nn.ReLU(),
+            nn.Linear(args.hidden_dim, len(args.digits)),
+        )
+
 
     model = pretrained_model.to(device)
+    model.requires_grad_(False)
+    model.fc.requires_grad_(True)
     optimizer = torch.optim.Adam(
-        [p for p in model.parameters() if p.requires_grad], lr=args.lr)
+        [p for p in model.fc.parameters() if p.requires_grad], lr=args.lr)
 
+    print("\n == MODEL TRAINING ==")
     train_model(model, optimizer, args.epochs, train_loader, val_loader, device)
 
 
@@ -125,6 +178,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=10, help='Batch size')
     parser.add_argument('--epochs', type=int, default=5, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=0.01, help='Learning rate')
+    parser.add_argument('--digits', nargs='+', type=int, default=[2,5], help='List of digits to classify (e.g., 2 6 7)')
+    parser.add_argument('-quant', '--quantum', action='store_true', default=False, help='Set if we use Quantum TL')
+    parser.add_argument( '--random', action='store_true', default=False, help='Set if we use a Random Encoder')
 
     args = parser.parse_args()
     main(args)
