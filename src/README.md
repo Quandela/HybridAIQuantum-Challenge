@@ -10,7 +10,7 @@ A transfer learning implementation that combines classical ResNet18 architecture
 - **Transfer Learning**: Leverages pre-trained ResNet18 weights from ImageNet, freezing the backbone and training only the classification head
 - **Flexible Configuration**: Supports custom digit selection, quantum circuit parameters, and training hyperparameters
 
-![Transfer Learning Model Architecture](QuantumNomad/TL_model.png)
+![Transfer Learning Model Architecture](TransferLearning/TL_model.png)
 
 **Key Features:**
 - Quantum circuit construction with configurable modes and encoding schemes
