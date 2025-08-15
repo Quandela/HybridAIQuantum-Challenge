@@ -50,6 +50,8 @@ Use the `run` script to execute different solutions:
 
 # Photonic interferometers for model fine-tuning
 ./run photonic_SSL
+./run TransferLearning
+
 ```
 
 **Note**: These examples use basic hyperparameters and may not represent the fully optimized versions submitted during the competition.
