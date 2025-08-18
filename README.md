@@ -48,6 +48,7 @@ Use the `run` script to execute different solutions:
 
 # Photonic interferometers for quantum annotations
 ./run solal
+./run AnnotCNN
 
 # Photonic interferometers for model fine-tuning
 ./run photonic_SSL

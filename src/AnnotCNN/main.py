@@ -38,13 +38,14 @@ from utils import MNIST_partial, get_dataloader, plot_training_metrics, accuracy
 from pathlib import Path
 script_dir = Path(__file__).parent
 DATA_PATH= (script_dir / ".." / ".." / "data").resolve()
+PCA_PATH= (script_dir/ "data").resolve()
 
 # Path to PCA model if needed.
 # Get the directory of this file (training.py)
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Go up one level (assuming your project structure has 'src' and 'data' as siblings)
 data_dir = os.path.join(base_dir, "..", "data")
-pca_model_path = os.path.join("./data/pca_model.pkl")
+pca_model_path = os.path.join(PCA_PATH, "pca_model.pkl")
 
 
 #######################

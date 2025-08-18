@@ -6,12 +6,15 @@ from utils import compute_downsample_shape, pca_downsample
 import torch.nn.functional as F
 import os
 import pickle
+from pathlib import Path
 
 # Get the directory of this file (training.py)
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Go up one level (assuming your project structure has 'src' and 'data' as siblings)
+script_dir = Path(__file__).parent
+PCA_PATH= (script_dir/ "data").resolve()
 data_dir = os.path.join(base_dir, "..", "data")
-pca_model_path = os.path.join("./data/pca_model.pkl")
+pca_model_path = os.path.join(PCA_PATH, "pca_model.pkl")
 
 
 def fit(epochs, lr, model, train_loader, val_loader, bs, optimizer, cfg):
