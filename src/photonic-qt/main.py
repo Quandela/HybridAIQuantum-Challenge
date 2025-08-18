@@ -14,6 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sys
 import os
+import argparse
 sys.path.append(os.path.join(os.path.dirname(__file__), 'TorchMPS'))
 from torchmps import MPS
 from scipy.optimize import minimize
@@ -65,9 +66,8 @@ def create_datasets():
     val_loader = DataLoader(val_dataset, batch_size, shuffle=False)
     return train_dataset, val_dataset, train_loader, val_loader, batch_size
 
-def train_classical_cnn(train_loader, val_loader):
+def train_classical_cnn(train_loader, val_loader, num_epochs):
     learning_rate = 1e-3
-    num_epochs = 1
     
     model = CNNModel()
     criterion = nn.CrossEntropyLoss()
@@ -192,8 +192,7 @@ class PhotonicQuantumTrain(nn.Module):
         x = F.linear(x, fc2_weight, fc2_bias)
         return x
 
-def train_quantum_model(qt_model, train_loader, train_loader_qnn, bs_1, bs_2, n_qubit, nw_list_normal):
-    num_epochs = 5
+def train_quantum_model(qt_model, train_loader, train_loader_qnn, bs_1, bs_2, n_qubit, nw_list_normal, num_training_rounds, num_epochs):
     step = 1e-3
     gamma_lr_scheduler = 0.1
     q_delta = 2 * np.pi
@@ -210,8 +209,6 @@ def train_quantum_model(qt_model, train_loader, train_loader_qnn, bs_1, bs_2, n_
     print("# of trainable parameter in Mapping model: ", num_trainable_params)
     print("# of trainable parameter in QNN model: ", bs_1.nb_parameters + bs_2.nb_parameters)
     print("# of trainable parameter in full model: ", num_trainable_params + bs_1.nb_parameters + bs_2.nb_parameters)
-    
-    num_training_rounds = 2
     
     loss_list = [] 
     loss_list_epoch = [] 
@@ -359,23 +356,34 @@ def evaluate_model(qt_model, train_loader, val_loader, qnn_parameters, bs_1, bs_
     print(f"Loss on the test set: {np.mean(loss_test_list):.2f}")
     print("Generalization error:", np.mean(loss_test_list) - np.mean(loss_train_list))
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Photonic Quantum Training')
+    parser.add_argument('--bond_dim', type=int, default=7, help='Bond dimension for MPS (default: 7)')
+    parser.add_argument('--num_training_rounds', type=int, default=2, help='Number of training rounds for quantum model (default: 2)')
+    parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training (default: 5)')
+    parser.add_argument('--classical_epochs', type=int, default=5, help='Number of epochs for classical CNN training (default: 1)')
+    return parser.parse_args()
+
 def main():
+    args = parse_args()
+    
     session = setup_session()
     bs_1, bs_2 = create_boson_samplers(session)
     
     train_dataset, val_dataset, train_loader, val_loader, batch_size = create_datasets()
     
-    model = train_classical_cnn(train_loader, val_loader)
+    model = train_classical_cnn(train_loader, val_loader, args.classical_epochs)
     
     n_qubit, nw_list_normal = calculate_qubits(model)
     
-    qt_model = PhotonicQuantumTrain(n_qubit, bond_dim=7).to(device)
+    qt_model = PhotonicQuantumTrain(n_qubit, bond_dim=args.bond_dim).to(device)
     
     batch_size_qnn = 1000
     train_loader_qnn = DataLoader(train_dataset, batch_size_qnn, shuffle=True)
     
     qt_model, qnn_parameters, loss_list_epoch, acc_list_epoch = train_quantum_model(
-        qt_model, train_loader, train_loader_qnn, bs_1, bs_2, n_qubit, nw_list_normal
+        qt_model, train_loader, train_loader_qnn, bs_1, bs_2, n_qubit, nw_list_normal, 
+        args.num_training_rounds, args.num_epochs
     )
     
     plot_results(loss_list_epoch, acc_list_epoch)
