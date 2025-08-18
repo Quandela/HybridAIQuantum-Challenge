@@ -30,21 +30,6 @@ GLASE is a QNN framework that estimates the gradients of the photonic QNNs using
   <img width="70%" alt="GLASE model" src="./GLASE/GLASE_model.png">
 </div>
 
-### A Photonic Quantum Train
-The photonic quantum train framework utilizes parameterized photonic quantum gates and a tensor network mapping model
-to generate parameters for classical neural networks (NNs) efficiently
-
-Prior to running, we recommend to download TorchMPS from our [participants' repository](https://github.com/Louisanity/TorchMPS) 
-
-<div align="center">
-  <img width="54%" alt="QTX-img" src="./QuantumTrain/qtx_model.png">
-</div>
-
-To run: `python3 QuantumTrain/main.py`
-You can vary the bond dimension by using `--bond_dim 5` arguments (default is `7`). To run classical experiments, you can run
-- for weight sharing:  `python3 QuantumTrain/main.py --weight_sharing`
-- for pruning:  `python3 QuantumTrain/main.py --pruning`
-
 #### Training the Model
 
 Run the training script with default hyperparameters or specify your own using command-line arguments. For example:
@@ -114,6 +99,21 @@ python main.py --model combined --epochs 20 --batch-size 64 --lr 1e-5 \
                 --save-model ./trained_model.pth \
                 --save-embeddings --log-dir ./training_logs
 ```
+
+### A Photonic Quantum Train
+The photonic quantum train framework utilizes parameterized photonic quantum gates and a tensor network mapping model
+to generate parameters for classical neural networks (NNs) efficiently
+
+Prior to running, we recommend to download TorchMPS from our [participants' repository](https://github.com/Louisanity/TorchMPS) 
+
+<div align="center">
+  <img width="54%" alt="QTX-img" src="./QuantumTrain/qtx_model.png">
+</div>
+
+To run: `python3 QuantumTrain/main.py`
+You can vary the bond dimension by using `--bond_dim 5` arguments (default is `7`). To run classical experiments, you can run
+- for weight sharing:  `python3 QuantumTrain/main.py --weight_sharing`
+- for pruning:  `python3 QuantumTrain/main.py --pruning`
 
 
 ## :pencil2: 2. Photonic interferometers for quantum annotations and feature engineering
