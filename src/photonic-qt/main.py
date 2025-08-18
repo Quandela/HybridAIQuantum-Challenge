@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from utils import MNIST_partial
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.utils.prune as prune
 import sys
 import os
 import argparse
@@ -41,14 +42,31 @@ def create_boson_samplers(session):
     print(126 * 70)
     return bs_1, bs_2
 
+class SharedWeightFC(nn.Module):
+    def __init__(self, in_features, out_features, shared_rows):
+        super(SharedWeightFC, self).__init__()
+        self.shared_weights = nn.Parameter(torch.randn(shared_rows, in_features))
+        self.bias = nn.Parameter(torch.randn(out_features))
+        self.out_features = out_features
+        self.shared_rows = shared_rows
+
+    def forward(self, x):
+        weight_matrix = self.shared_weights.repeat(self.out_features // self.shared_rows, 1)
+        return torch.matmul(x, weight_matrix.t()) + self.bias
+
 class CNNModel(nn.Module):
-    def __init__(self):
+    def __init__(self, use_weight_sharing=False, shared_rows=10):
         super(CNNModel, self).__init__()
         self.conv1 = nn.Conv2d(1, 8, kernel_size=5)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv2d(8, 12, kernel_size=5)
-        self.fc1 = nn.Linear(12*4*4, 20)
-        self.fc2 = nn.Linear(20, 10)
+        
+        if use_weight_sharing:
+            self.fc1 = SharedWeightFC(in_features=12*4*4, out_features=20, shared_rows=shared_rows)
+            self.fc2 = nn.Linear(20, 10)
+        else:
+            self.fc1 = nn.Linear(12*4*4, 20)
+            self.fc2 = nn.Linear(20, 10)
         
     def forward(self, x):
         x = self.pool(self.conv1(x))
@@ -66,18 +84,62 @@ def create_datasets():
     val_loader = DataLoader(val_dataset, batch_size, shuffle=False)
     return train_dataset, val_dataset, train_loader, val_loader, batch_size
 
-def train_classical_cnn(train_loader, val_loader, num_epochs):
+def apply_pruning(model, amount=0.3):
+    """Apply structured pruning to convolutional and fully connected layers."""
+    for name, layer in model.named_modules():
+        if isinstance(layer, nn.Conv2d):
+            prune.ln_structured(layer, name='weight', amount=amount, n=2, dim=0)
+            print(f"Applied structured pruning to Conv2d layer {name} with {amount * 100:.1f}% filters pruned.")
+        elif isinstance(layer, nn.Linear):
+            prune.ln_structured(layer, name='weight', amount=amount, n=2, dim=1)
+            print(f"Applied structured pruning to Linear layer {name} with {amount * 100:.1f}% neurons pruned.")
+
+def remove_pruning(model):
+    """Remove pruning masks to finalize the reduced model."""
+    for name, layer in model.named_modules():
+        if isinstance(layer, (nn.Conv2d, nn.Linear)):
+            try:
+                prune.remove(layer, 'weight')
+            except ValueError:
+                pass  # Layer was not pruned
+
+class MaskedAdam(torch.optim.Adam):
+    def __init__(self, params, **kwargs):
+        super().__init__(params, **kwargs)
+
+    def step(self, closure=None):
+        for group in self.param_groups:
+            for param in group['params']:
+                if param.grad is None:
+                    continue
+                grad_mask = param.data != 0
+                param.grad.data.mul_(grad_mask)
+        super().step(closure)
+
+def train_classical_cnn(train_loader, val_loader, num_epochs, use_pruning=False, pruning_amount=0.5, use_weight_sharing=False, shared_rows=10):
     learning_rate = 1e-3
     
-    model = CNNModel()
+    model = CNNModel(use_weight_sharing=use_weight_sharing, shared_rows=shared_rows)
+    
+    if use_pruning:
+        apply_pruning(model, amount=pruning_amount)
+        remove_pruning(model)
+        
+    model = model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    
+    if use_pruning:
+        optimizer = MaskedAdam(model.parameters(), lr=learning_rate)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
     num_classical_parameter = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("# of parameters in classical CNN model: ", num_classical_parameter)
     
     for epoch in range(num_epochs):
+        model.train()
         for i, (images, labels) in enumerate(train_loader):
+            images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -93,6 +155,7 @@ def train_classical_cnn(train_loader, val_loader, num_epochs):
     loss_test_list = [] 
     with torch.no_grad():
         for images, labels in val_loader:
+            images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             loss_test = criterion(outputs, labels).cpu().detach().numpy()
             loss_test_list.append(loss_test)
@@ -104,27 +167,31 @@ def train_classical_cnn(train_loader, val_loader, num_epochs):
     return model
 
 def calculate_qubits(model):
+    # Always use standard CNN architecture for quantum circuit parameter calculation
+    # regardless of classical training method (weight sharing, pruning, etc.)
+    standard_model = CNNModel(use_weight_sharing=False, shared_rows=10)
+    
     numpy_weights = {}
     nw_list = [] 
     nw_list_normal = []
-    for name, param in model.state_dict().items():
+    for name, param in standard_model.state_dict().items():
         numpy_weights[name] = param.cpu().numpy()
     for i in numpy_weights:
         nw_list.append(list(numpy_weights[i].flatten()))
     for i in nw_list:
         for j in i:
             nw_list_normal.append(j)
-    print("# of NN parameters: ", len(nw_list_normal))
+    print("# of NN parameters for quantum circuit: ", len(nw_list_normal))
     n_qubits = int(np.ceil(np.log2(len(nw_list_normal))))
     print("Required qubit number: ", n_qubits)
     n_qubit = n_qubits
     return n_qubit, nw_list_normal
 
-def probs_to_weights(probs_):
+def probs_to_weights(probs_, model_template):
     new_state_dict = {}
     data_iterator = probs_.view(-1)
     
-    for name, param in CNNModel().state_dict().items():
+    for name, param in model_template.state_dict().items():
         shape = param.shape
         num_elements = param.numel()
         chunk = data_iterator[:num_elements].reshape(shape)
@@ -170,7 +237,9 @@ class PhotonicQuantumTrain(nn.Module):
         prob_val_post_processed = self.MappingNetwork(combined_data_torch)
         prob_val_post_processed = prob_val_post_processed - prob_val_post_processed.mean()
         
-        state_dict = probs_to_weights(prob_val_post_processed)
+        # Always use standard CNN architecture for quantum training regardless of classical training method
+        model_template = CNNModel(use_weight_sharing=False, shared_rows=10)
+        state_dict = probs_to_weights(prob_val_post_processed, model_template)
             
         dtype = torch.float32
         
@@ -362,17 +431,29 @@ def parse_args():
     parser.add_argument('--num_training_rounds', type=int, default=2, help='Number of training rounds for quantum model (default: 2)')
     parser.add_argument('--num_epochs', type=int, default=5, help='Number of epochs for training (default: 5)')
     parser.add_argument('--classical_epochs', type=int, default=5, help='Number of epochs for classical CNN training (default: 1)')
+    parser.add_argument('--pruning', action='store_true', help='Enable pruning experiment')
+    parser.add_argument('--pruning_amount', type=float, default=0.5, help='Pruning amount (default: 0.5)')
+    parser.add_argument('--weight_sharing', action='store_true', help='Enable weight sharing experiment')
+    parser.add_argument('--shared_rows', type=int, default=10, help='Number of shared rows for weight sharing (default: 10)')
     return parser.parse_args()
 
 def main():
     args = parse_args()
+    
+    print(f"Running experiment with:")
+    print(f"  Pruning: {args.pruning} (amount: {args.pruning_amount if args.pruning else 'N/A'})")
+    print(f"  Weight sharing: {args.weight_sharing} (shared rows: {args.shared_rows if args.weight_sharing else 'N/A'})")
     
     session = setup_session()
     bs_1, bs_2 = create_boson_samplers(session)
     
     train_dataset, val_dataset, train_loader, val_loader, batch_size = create_datasets()
     
-    model = train_classical_cnn(train_loader, val_loader, args.classical_epochs)
+    model = train_classical_cnn(
+        train_loader, val_loader, args.classical_epochs,
+        use_pruning=args.pruning, pruning_amount=args.pruning_amount,
+        use_weight_sharing=args.weight_sharing, shared_rows=args.shared_rows
+    )
     
     n_qubit, nw_list_normal = calculate_qubits(model)
     
