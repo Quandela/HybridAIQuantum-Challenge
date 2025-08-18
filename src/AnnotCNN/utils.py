@@ -149,10 +149,13 @@ def compute_downsample_shape(nb_params, target_aspect=1.0):
     for h in range(int(sqrt(nb_params)), 0, -1):
         if nb_params % h == 0:
             w = nb_params // h
+            #print(f"\n Downsample shape with nb params =  {nb_params} -> {h} x {w} \n")
             return h, w
     # If no factor pair exactly divides nb_params, default to a square shape.
     h = int(sqrt(nb_params))
+    #print(f"\n Downsample shape with nb params =  {nb_params} -> {h} x {h} \n")
     return h, h
+
 
 
 

@@ -35,6 +35,9 @@ import pandas as pd
 # Import dataset and utility functions
 from utils import MNIST_partial, get_dataloader, plot_training_metrics, accuracy
 
+from pathlib import Path
+script_dir = Path(__file__).parent
+DATA_PATH= (script_dir / ".." / ".." / "data").resolve()
 
 # Path to PCA model if needed.
 # Get the directory of this file (training.py)
@@ -470,12 +473,8 @@ def hybrid_main():
 
     # 3. Create Scaleway session if remote backend is chosen.
     session = None
-    if cfg["quantum"]["backend"] == "scaleway":
-        session = create_scaleway_session(cfg)
-        session.start()
-        print("Scaleway QPU session started.\n")
-    else:
-        print("Proceeding with local simulation backend.")
+
+    print("Proceeding with local simulation backend.")
 
     # 4. Select circuit builder.
     circuit_type = cfg["quantum"].get("circuit_type", "triangular")
@@ -524,8 +523,8 @@ def hybrid_main():
     pcvl.pdisplay(bs.create_circuit())
 
     # 6. Load MNIST dataset.
-    train_dataset = MNIST_partial(data="data", split="train")
-    val_dataset = MNIST_partial(data="data", split="val")
+    train_dataset = MNIST_partial(data=DATA_PATH, split="train")
+    val_dataset = MNIST_partial(data=DATA_PATH, split="val")
     train_loader = get_dataloader(train_dataset, batch_size=cfg["data"]["batch_size"], shuffle=cfg["data"]["shuffle"])
     val_loader = get_dataloader(val_dataset, batch_size=cfg["data"]["batch_size"], shuffle=False)
     print(f"Loaded {len(train_dataset)} training samples and {len(val_dataset)} validation samples.")
@@ -629,10 +628,6 @@ def hybrid_main():
         json.dump(summary, f, indent=4)
     print(f"Summary saved to {summary_path}")
 
-    # 14. Stop Scaleway session if used.
-    if session:
-        session.stop()
-        print("Scaleway QPU session stopped.")
 
 
 ###########################
@@ -652,8 +647,8 @@ def main_classic():
     batch_size = cfg["data"].get("batch_size", 30)
     
     # Load the MNIST dataset (CSV version) using MNIST_partial
-    train_dataset = MNIST_partial(data="data", split="train")
-    val_dataset   = MNIST_partial(data="data", split="val")
+    train_dataset = MNIST_partial(data=DATA_PATH, split="train")
+    val_dataset   = MNIST_partial(data=DATA_PATH, split="val")
     
     # Create a digit collage visualization
     plot_digit_collage(train_dataset, result_dir)

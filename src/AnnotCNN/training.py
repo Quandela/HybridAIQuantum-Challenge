@@ -11,7 +11,7 @@ import pickle
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Go up one level (assuming your project structure has 'src' and 'data' as siblings)
 data_dir = os.path.join(base_dir, "..", "data")
-pca_model_path = os.path.join(data_dir, "pca_model.pkl")
+pca_model_path = os.path.join("./data/pca_model.pkl")
 
 
 def fit(epochs, lr, model, train_loader, val_loader, bs, optimizer, cfg):
@@ -44,6 +44,7 @@ def fit(epochs, lr, model, train_loader, val_loader, bs, optimizer, cfg):
                             pca_model = pickle.load(f)
                         # Use the PCA-based downsampling and assign to img_resized
                         img_resized  = pca_downsample(img, pca_model)
+                        #print(f" \n ---------- \n Image resized with PCA to {img_resized.shape} \n ----------")
                     else:
                         # Use bilinear interpolation as fallback
                         # Using sequential embedding (remove parallel_embed call)
@@ -54,7 +55,8 @@ def fit(epochs, lr, model, train_loader, val_loader, bs, optimizer, cfg):
                         # Remove batch and channel dims: shape becomes [height, width]  resulting shape becomes [1, 9, 14]
                         img_resized = img_resized.squeeze(0)
                         # Now the flattened tensor has exactly downsample_shape[0]*downsample_shape[1] pixels.
-  
+                        #print(f" \n ---------- \n Image resized with bilinear to {img_resized.shape} \n ----------")
+                    #print(f"\n ---- \n Img resized of shape {img_resized.shape} \n ---- ")
                     emb = bs.embed(img_resized, bs.n_samples)
                     emb_list.append(emb)
 
