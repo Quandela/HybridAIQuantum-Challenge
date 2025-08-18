@@ -44,7 +44,7 @@ DATA_PATH= (script_dir / ".." / ".." / "data").resolve()
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Go up one level (assuming your project structure has 'src' and 'data' as siblings)
 data_dir = os.path.join(base_dir, "..", "data")
-pca_model_path = os.path.join(data_dir, "pca_model.pkl")
+pca_model_path = os.path.join("./data/pca_model.pkl")
 
 
 #######################
