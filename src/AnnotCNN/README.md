@@ -6,7 +6,7 @@ We use bilinear or PCA-based compression to downsample images, map phase paramet
 
 Initial tests indicate that photonic embedding may operate as a feature map with low parameter counts. However, due to limited dataset size and simulator/QPU constraints, accuracy deltas should not be overinterpreted. Instead, we prioritize reproducibility (fixed configs, logged seeds, explicit downsampling), ablation levers (encoding, interferometer shape, sampling strategy), and MerLin's QuantumLayer future compatibility for benchmarking and speedups.
 
-![Alt text](../overview_chart.png)
+![Alt text](./overview_chart.png)
 
 ## Setup
 This project uses [Conda](https://docs.conda.io/en/latest/) for environment management. To set up the environment, run the following commands:
