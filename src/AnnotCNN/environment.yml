@@ -1,0 +1,24 @@
+name: q2pi-hybrid-quantum-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python<=3.12
+  - numpy
+  - pandas==2.2.3
+  - matplotlib
+  - scikit-learn
+  - seaborn
+  - scipy
+  - jupyter
+  - pytorch=2.*      # Ensure torch 2.x is installed
+  - torchvision~=0.19
+  - tqdm==4.67.0
+  - pep8
+  - pylint
+  - pip
+  - pip:
+      - perceval-quandela==0.12.*
+      - joblib
+      - optuna
+      - python-decouple

@@ -1,0 +1,49 @@
+# src/yaml_default_config.yaml
+data:
+  train_csv: "data/train.csv"
+  test_csv: "data/val.csv"
+  batch_size: 30  #1
+  shuffle: true
+
+model:
+  type: "hybrid"   # "hybrid" uses quantum embedding; "classical" disables it.
+  fourier_features: 50
+  conv_channels: 16
+  kernel_size: 5
+  output_dim: 30
+
+quantum:
+  backend: "local"  # "local" or "scaleway"
+  use_scaleway: False     # False = use local simulation; True = use remote QPU via Scaleway
+  n_modes: 12  #142
+  n_photons: 6  #27
+  postselect: 3
+  n_samples: 1000  #
+  circuit_type: "pdf"   # Options: "triangular", "rectangular", "pdf", "base"  # Options: "triangular", "rectangular"
+  variational: true  # Set true to use the variational quantum circuit approach
+  adaptive_sampling: false
+  cache_enabled: true
+  cache_directory: "results/cache"
+  local_backend: "SLOS"   # sim:sampling:l4  SLOS -- Perceval backend for local simulation (e.g., SLOS, CliffordClifford2017, MPS)
+  scaleway_platform: "sim:sampling:2l4"  # sim:sampling:2l4  sim:sampling:p100 Remote platform (if use_scaleway=true)
+  downsample_method: "pca"   # pca or "bilinear" (default)
+  #sim:sampling:2l4 platform can simulate up to 27 photons and 142 modes,
+
+training:
+  epochs: 5
+  learning_rate: 0.001
+  optimizer: "adam"  # Optimizer type "adam", "SGD" 
+  device: "auto"  # "cpu", "cuda", or "auto"
+
+optimization:
+  enabled: true
+  method: "tpe"  # "tpe", "grid", or "optuna"
+  max_evals: 10
+  space:
+    n_modes: [6, 12, 24, 30]
+    n_photons: [6, 10]
+    learning_rate: [0.0001, 0.001, 0.01]
+
+
+
+
