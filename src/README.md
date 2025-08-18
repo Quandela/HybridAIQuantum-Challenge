@@ -30,6 +30,21 @@ GLASE is a QNN framework that estimates the gradients of the photonic QNNs using
   <img width="70%" alt="GLASE model" src="./GLASE/GLASE_model.png">
 </div>
 
+### A Photonic Quantum Train
+The photonic quantum train framework utilizes parameterized photonic quantum gates and a tensor network mapping model
+to generate parameters for classical neural networks (NNs) efficiently
+
+Prior to running, we recommend to download TorchMPS from our [participants' repository](https://github.com/Louisanity/TorchMPS) 
+
+<div align="center">
+  <img width="54%" alt="QTX-img" src="./photonic-qt/qtx_model.png">
+</div>
+
+To run: `python3 photonic-qt/main.py`
+You can vary the bond dimension by using `--bond_dim 5` arguments (default is `7`). To run classical experiments, you can run
+- for weight sharing:  `python3 photonic-qt/main.py --weight_sharing`
+- for pruning:  `python3 photonic-qt/main.py --pruning`
+
 #### Training the Model
 
 Run the training script with default hyperparameters or specify your own using command-line arguments. For example:
