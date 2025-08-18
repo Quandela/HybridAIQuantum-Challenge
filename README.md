@@ -44,6 +44,7 @@ Use the `run` script to execute different solutions:
 ./run tristan
 ./run GLASE
 ./run PQK
+./run QuantumTrain
 
 # Photonic interferometers for quantum annotations
 ./run solal
