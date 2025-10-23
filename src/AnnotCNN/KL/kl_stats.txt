@@ -1,0 +1,3 @@
+Validation size: 600
+KL-based accuracy (true class has smallest KL): 0.8933
+Mean KL_true: 0.631650, Mean KL_best_wrong: 4.692499
