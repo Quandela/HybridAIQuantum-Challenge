@@ -1,0 +1,10 @@
+tensorflow
+numpy
+matplotlib
+scikit-learn
+pandas
+tqdm
+perceval-quandela==0.12.2
+cma
+python-dotenv
+merlin-datasets
