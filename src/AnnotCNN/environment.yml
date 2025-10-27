@@ -21,4 +21,3 @@ dependencies:
       - perceval-quandela==0.12.*
       - joblib
       - optuna
-      - python-decouple

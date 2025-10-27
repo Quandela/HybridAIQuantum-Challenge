@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 
 # previously src/config.py
 import yaml
-from decouple import config as decouple_config
 
 def load_config(config_path="yaml_default_config.yaml"):
     """
@@ -30,9 +29,8 @@ def create_scaleway_session(cfg):
     Expects SCW_PROJECT_ID and SCW_SECRET_KEY to be set in the environment.
     """
     import perceval.providers.scaleway as scw
-    # Get credentials from the .env file using python-decouple.
-    proj_id = decouple_config("SCW_PROJECT_ID") # 
-    token = decouple_config("SCW_SECRET_KEY") # 
+    proj_id = os.getenv("SCW_PROJECT_ID")
+    token = os.getenv("SCW_SECRET_KEY")
     platform = cfg["quantum"].get("scaleway_platform", "sim:sampling:p100")
     if not proj_id or not token:
         raise RuntimeError("Scaleway credentials not found in environment.")
@@ -218,8 +216,6 @@ def fourier_encode(image_tensor, n_features=100):
     fft_abs = torch.abs(fft_result).flatten()
     # Select the first n_features; you might also choose to sort or use a different selection method.
     return fft_abs[:n_features]
-
-
 
 
 
