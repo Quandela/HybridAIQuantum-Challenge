@@ -1,5 +1,5 @@
 # Core quantum computing libraries
-merlinquantum==0.1.2
+merlinquantum
 perceval-quandela==0.13.2
 
 # Deep learning frameworks
