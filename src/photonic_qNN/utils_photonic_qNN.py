@@ -17,6 +17,7 @@ import json
 import pandas as pd
 import re
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from merlin.datasets import mnist_digits
 
 
 def set_seed(seed=42):
@@ -134,44 +135,35 @@ class MNIST_partial(Dataset):
 def load_dataset(args):
     SIZE = args.size
     batch_size = args.bs
-    #TODO: replace with argument data path
-    data_path = "/Users/cassandrenotton/Documents/projects/Challenge_Perceval/HybridAIQuantum-Challenge/data"
 
-    #crop a square at the center of the image of shape SIZE x SIZE
+    # Load the Perceval Quest splits from the Merlin dataset helper
+    X_train_raw, y_train_raw, _ = mnist_digits.get_data_train_percevalquest()
+    X_val_raw, y_val_raw, _ = mnist_digits.get_data_test_percevalquest()
+
+    # Crop a square at the centre of each image (SIZE x SIZE) and flatten it
     transform = TransformCenter(size=SIZE)
+    X_train_flat = np.stack([transform(img).numpy() for img in X_train_raw]).astype(np.float32)
+    X_val_flat = np.stack([transform(img).numpy() for img in X_val_raw]).astype(np.float32)
 
-    train_dataset = MNIST_partial(data=data_path, transform=transform, split = "train")
-    #train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    y_train = np.asarray(y_train_raw, dtype=np.int64)
+    y_val = np.asarray(y_val_raw, dtype=np.int64)
 
-    val_dataset = MNIST_partial(data=data_path, transform=transform, split = "val")
-    #val_loader = DataLoader(val_dataset, batch_size=batch_size)
-
-    # Convert dataset to numpy arrays
-    X_train = []
-    y_train = []
-    for data, label in train_dataset:
-        X_train.append(data.numpy())
-        y_train.append(label.numpy() if hasattr(label, 'numpy') else label)
-    X_val = []
-    y_val = []
-    for data, label in val_dataset:
-        X_val.append(data.numpy())
-        y_val.append(label.numpy() if hasattr(label, 'numpy') else label)
-
-    #scaling (not necessary as StandardScaler does not provide good results here)
+    # Feature-wise scaling (keeps behaviour identical to previous implementation)
     scaler = MinMaxScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_val = scaler.transform(X_val)
+    X_train_scaled = scaler.fit_transform(X_train_flat)
+    X_val_scaled = scaler.transform(X_val_flat)
 
-    train_dataset = TensorDataset(torch.Tensor(X_train), torch.tensor(y_train))
-    val_dataset = TensorDataset(torch.Tensor(X_val), torch.tensor(y_val))
+    train_tensor = torch.from_numpy(X_train_scaled).float()
+    val_tensor = torch.from_numpy(X_val_scaled).float()
+    train_dataset = TensorDataset(train_tensor, torch.from_numpy(y_train))
+    val_dataset = TensorDataset(val_tensor, torch.from_numpy(y_val))
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
     INPUT_SIZE = SIZE * SIZE
     OUTPUT_FEATURES = 10
 
-
-    return np.array(X_train), np.array(X_val), np.array(y_train), np.array(y_val), train_loader, val_loader, INPUT_SIZE, OUTPUT_FEATURES
+    return X_train_scaled, X_val_scaled, y_train, y_val, train_loader, val_loader, INPUT_SIZE, OUTPUT_FEATURES
 
 ###############################
 ## Build the quantum circuit ##
@@ -554,6 +546,5 @@ def save_experiment_results(results, filename='photonic_qNN_results.json'):
         json.dump(all_results, file, indent=4)
 
     return len(all_results)
-
 
 
