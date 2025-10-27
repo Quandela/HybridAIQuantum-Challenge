@@ -1,13 +1,52 @@
-#! /bin/bash
-#!/bin/bash
-if [ "$1" = "photonic_SSL" ]; then
-    python3 "src/$1/main.py" --quantum
-elif [ "$1" = "GLASE" ]; then
-    python3 "src/GLASE/train.py"
-elif [ "$1" = "AnnotCNN" ]; then
-    python3 "src/AnnotCNN/main.py" hybrid
-elif [ "$1" = "Lancelot" ]; then
-    python3 "src/Lancelot/main.py" hybrid 
-else
-    python3 "src/$1/main.py"
+#!/usr/bin/env bash
+set -euo pipefail
+
+print_models() {
+cat <<'EOF'
+Usage: ./run <model>
+
+Available models (as listed in README "Running Examples"):
+
+Photonic interferometers as feature extractors
+  q_kernel          Quantum kernel approach using photonic interferometers
+  photonic_qNN      Photonic quantum neural network classifier
+  tristan           Hybrid photonic/classical workflow from team Tristan leveraging a photonic convolution
+  GLASE             GLASE team's photonic feature extractor using a surrogate model (Winner of Perceval Quest 2024)
+  Lancelot          Lancelot hybrid convolutional model using unitary dilation
+  PQK               Photonic Quantum Kernels solution applied on a photonic convolution
+  QuantumTrain      QuantumTrain photonic feature extractor using a dual QNN to train a CNN with less trainable parameters
+
+Photonic interferometers for quantum annotations
+  solal             Solal annotator leveraging photonic circuits for feature extraction
+  AnnotCNN          Quantum-Annotated CNN hybrid model by team Quantum Naples
+
+Photonic interferometers for model fine-tuning
+  photonic_SSL      Self-supervised photonic pipeline leveraging a quantum loss
+  TransferLearning  Transfer learning with photonic embeddings
+
+Use the model name as the first argument to execute the corresponding entry point.
+EOF
+}
+
+if [[ $# -eq 0 ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]] || [[ "$1" == "help" ]] || [[ "$1" == "list" ]]; then
+    print_models
+    exit 0
 fi
+
+case "$1" in
+    photonic_SSL)
+        python3 "src/$1/main.py" --quantum
+        ;;
+    GLASE)
+        python3 "src/GLASE/train.py"
+        ;;
+    AnnotCNN)
+        python3 "src/AnnotCNN/main.py" hybrid
+        ;;
+    Lancelot)
+        python3 "src/Lancelot/main.py" hybrid
+        ;;
+    *)
+        python3 "src/$1/main.py"
+        ;;
+esac

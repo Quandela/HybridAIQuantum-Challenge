@@ -35,7 +35,7 @@ This installs the MerLin framework ([documentation](https://merlinquantum.ai/ind
 
 ### Running Examples
 
-Use the `run` script to execute different solutions:
+Use the `run` script to execute different solutions (and `./run -h` to get a description of the models !):
 
 ```bash
 # Photonic interferometers as feature extractors
