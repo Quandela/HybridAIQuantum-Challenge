@@ -1,6 +1,7 @@
 # Lancelot LOQC MNIST
 
 This experiment was developed for the Perceval Quest, a joint Quandela/Scaleway challenge. The repository explores how Linear Optical Quantum Computing (LOQC) can augment a classical convolutional neural network (CNN) on the MNIST handwritten digits task.
+The code was developped by Valentin Deumier.
 
 ## Project Structure
 
@@ -22,6 +23,10 @@ The classical model builds a lightweight CNN over 28×28 grayscale inputs:
 A smaller "light" variant is also provided for quick experimentation on the pooled 14×14 resolution. Training uses categorical cross-entropy with Adam and produces accuracy/loss curves and a confusion matrix.
 
 ## Hybrid LOQC Model
+
+<div align="center">
+  <img width="50%" alt="Lancelot-img" src="Lancelot_model.png">
+</div>
 
 The hybrid approach maps each pooled image to an interferometer built with Perceval components:
 

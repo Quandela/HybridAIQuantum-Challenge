@@ -6,6 +6,8 @@ elif [ "$1" = "GLASE" ]; then
     python3 "src/GLASE/train.py"
 elif [ "$1" = "AnnotCNN" ]; then
     python3 "src/AnnotCNN/main.py" hybrid
+elif [ "$1" = "Lancelot" ]; then
+    python3 "src/Lancelot/main.py" hybrid 
 else
     python3 "src/$1/main.py"
 fi

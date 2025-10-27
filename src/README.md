@@ -46,6 +46,27 @@ To visualize the training metrics after training both QNN and CNN, use the plott
 python ./GLASE/plot_result.py --files qnn.pkl cnn.pkl
 ```
 
+### Lancelot: leveraging unitary dilation matrix for feature extraction
+
+This work explores how Linear Optical Quantum Computing (LOQC) can augment a classical convolutional neural network (CNN) on the MNIST handwritten digits task.
+The hybrid approach maps each pooled image to an interferometer built with Perceval components:
+
+1. Images are down-sampled via max pooling, reshaped into Hamiltonians, and converted to unitary matrices using a dilation trick.
+2. A brickwork circuit composed of programmable beam splitters and generic two-mode gates encodes optical parameters (`BS_params`, `omega_params`).
+3. Photon sampling (with optional Scaleway remote acceleration) estimates mean spatial distributions which serve as features for a classical dense classifier.
+4. Optical parameters are optimised with SPSA or CMA-ES, while the classical layer is fine-tuned with gradient descent.
+
+<div align="center">
+  <img width="50%" alt="Lancelot-img" src="./Lancelot/Lancelot_model.png">
+</div>
+
+#### Training the Model
+
+```bash
+python ./Lancelot/main.py hybrid
+```
+
+
 ### Tristan : A quantum 2d convolution-based network implementation
 Inspired by [S. Shi, et al](https://arxiv.org/pdf/2303.03707), our implementation (Fig. 1) replaces the dot product of traditional convolution by a quantum circuit while keeping the sliding window principle. Our quantum implementation is a photonic circuit with two parts: a feature map and an ansatz. The feature map uses a fixed input Fock state and contains beam splitters and phase shifters, with some parameters that are fixed and others that depend on input pixel values.
 
