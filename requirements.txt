@@ -1,5 +1,5 @@
 # Core quantum computing libraries
-merlinquantum
+merlinquantum==0.1.2
 perceval-quandela==0.13.2
 
 # Deep learning frameworks
@@ -27,3 +27,4 @@ tqdm==4.67.1
 requests==2.32.4
 dataclasses-json
 timm
+tensorboard
